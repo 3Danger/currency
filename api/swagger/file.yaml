@@ -1,0 +1,1005 @@
+swagger: "2.0"
+info:
+  title: Сервис конвертации валюты
+  version: 1.0.0
+  description: API сервиса Currency
+
+schemes:
+  - http
+  - https
+
+basePath: /api
+
+tags:
+  - name: Convert
+    description: Конвертация
+
+paths:
+  /get-primary-accounting-docs:
+    post:
+      summary: Получение списка финансовых документов по заказам
+      description: Получение списка финансовых документов по заказам
+      tags:
+        - Convert
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description: Идентификаторы заказов
+          required: true
+          schema:
+            type: object
+            required: [order_guids]
+            properties:
+              order_guids:
+                type: array
+                minItems: 1
+                maxItems: 1000
+                items:
+                  type: string
+                  format: uuid
+      responses:
+        400:
+          description: Клиентская ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        422:
+          description: Ошибка схемы запроса
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        200:
+          description: Успешное получение данных
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    guid:
+                      type: string
+                      format: uuid
+                    payment_bank_statement:
+                      type: array
+                      items:
+                        $ref: '#/definitions/CashFlowRegDocWithLineId'
+                    payment_ewallet_transactions:
+                      type: array
+                      items:
+                        $ref: '#/definitions/CashFlowRegDoc'
+                    payment_cash_order_arrival:
+                      type: array
+                      items:
+                        $ref: '#/definitions/CashFlowRegDoc'
+                    payment_cash_order_expense:
+                      type: array
+                      items:
+                        $ref: '#/definitions/CashFlowRegDoc'
+                    return_of_goods_from_customer:
+                      type: array
+                      items:
+                        $ref: '#/definitions/CashFlowRegDoc'
+                    sale:
+                      type: array
+                      items:
+                        $ref: '#/definitions/CashFlowRegDoc'
+                    sale_correction:
+                      type: array
+                      items:
+                        $ref: '#/definitions/CashFlowRegDoc'
+                    payment_correction:
+                      type: array
+                      items:
+                        $ref: '#/definitions/CashFlowRegDocWithLineId'
+                    refund_request:
+                      type: array
+                      items:
+                        $ref: '#/definitions/CashFlowRegDoc'
+
+  /bank-statement/separate-payment:
+    post:
+      summary: Разнесение Выписки банка в другой заказ
+      description: Разнесение Выписки банка в другой заказ менеджером. По итогу создаётся две новых записи на Приход и Расход. Новые записи не передаются в 1С.
+      tags:
+        - Bank Statement
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description: Запрос на разнесение выписки банка в другой заказ.
+          required: true
+          schema:
+            required:
+              - source_order
+              - guid
+              - line_id
+              - recipient_order
+              - amount
+            properties:
+              source_order:
+                type: string
+                format: uuid
+                description: Исходный заказ из которого нужно перенести
+              guid:
+                type: string
+                format: uuid
+                description: Guid документа (Выписка банка)
+              line_id:
+                type: string
+                format: uuid
+                description: строка табличной части
+                example: "3fa85f64-5717-4562-b3fc-2c963f66as48"
+              recipient_order:
+                type: string
+                format: uuid
+                description: Заказ в который переносим ДС
+              amount:
+                type: string
+                description: сумма
+                example: 1500.97
+      responses:
+        400:
+          description: Клиентская ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        422:
+          description: Ошибка схемы запроса
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        200:
+          description: Успешное получение данных
+          schema:
+            $ref: '#/definitions/PaymentBankState'
+
+  /balance/individuals:
+    post:
+      summary: Получение данных по Балансу Заказа
+      description: Получение данных по Балансу Заказа
+      tags:
+        - Order
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description: Идентификаторы заказов
+          required: true
+          schema:
+            type: object
+            required: [order_guids]
+            properties:
+              order_guids:
+                type: array
+                minItems: 1
+                maxItems: 1000
+                items:
+                  type: string
+                  format: uuid
+      responses:
+        400:
+          description: Клиентская ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        422:
+          description: Ошибка схемы запроса
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        601:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        200:
+          description: Успешное получение данных
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: '#/definitions/Balance'
+
+  /balance/contractors:
+    post:
+      summary: Получение суммы баланса контрагента
+      description: >
+        "Возвращает баланс по запрашиваемым контрагентам.
+        Баланс контрагента - сумма всех балансов заказов контрагента"
+      tags:
+        - Contractor
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description: Идентификаторы контракторов
+          required: true
+          schema:
+            type: object
+            required: [ contractor_guids ]
+            properties:
+              contractor_guids:
+                type: array
+                minItems: 1
+                maxItems: 1000
+                items:
+                  type: string
+                  format: uuid
+      responses:
+        500:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        422:
+          description: Неверный формат гуида
+          schema:
+            $ref: '#/definitions/Error'
+        200:
+          description: Успешное получение данных
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: '#/definitions/BalanceContractor'
+
+  /detail-balance/contractor/{guid}:
+    get:
+      summary: Детализованная информация о балансе контрагентов
+      description: Детализованная информация о балансе контрагентов
+      tags:
+        - Contractor
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: guid
+          description: Идентификатор контрагента
+          required: true
+          type: string
+          format: uuid
+        - $ref: "#/parameters/offsetParam"
+        - $ref: "#/parameters/limitParam"
+      responses:
+        400:
+          description: Клиентская ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        422:
+          description: Ошибка схемы запроса
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        200:
+          description: Успешное получение данных
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  $ref: '#/definitions/ContractorDetailBalance'
+
+  /unrecognized-payments/assign:
+    post:
+      summary: Назначение нераспознанного платежа
+      tags:
+        - Bank Statement
+      description: >
+        Принимает информацию о нераспознанном платеже с типом Выписка банка и назначает его соответствующему заказу.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description: Идентификаторы заказов
+          required: true
+          schema:
+            type: object
+            required: [ order_guids, line_id, guid ]
+            properties:
+              guid:
+                type: string
+                format: uuid
+                x-nullable: false
+              line_id:
+                type: string
+                format: uuid
+                x-nullable: false
+              order_guid:
+                type: string
+                format: uuid
+                x-nullable: false
+      responses:
+        400:
+          description: Не верный guid, line_id или order_guid
+          schema:
+            $ref: '#/definitions/ErrorWithReason'
+        460:
+          description: Платеж не найден в сервисе баланса, попробуйте позже
+          schema:
+            $ref: '#/definitions/ErrorWithReason'
+        461:
+          description: Заказ не найден в сервисе баланса, попробуйте позже
+          schema:
+            $ref: '#/definitions/ErrorWithReason'
+        462:
+          description: Заказ должен быть безналичным
+          schema:
+            $ref: '#/definitions/ErrorWithReason'
+        463:
+          description: Контрагент в заказе и платеже не совпадает
+          schema:
+            $ref: '#/definitions/ErrorWithReason'
+        464:
+          description: Фирма в заказе и платеже не совпадает
+          schema:
+            $ref: '#/definitions/ErrorWithReason'
+        500:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        200:
+          description: Платеж успешно назначен заказу
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Платеж успешно назначен.
+
+  /fill-order-pay-sum:
+    post:
+      summary: Пересчёт Суммы оплаты по заказам за дату
+      description: Ручка для запуска пересчёта Суммы оплаты (pay_sum) по заказам за дату. Используется для массового пересчёта
+      tags:
+        - Other
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description: Параметры запроса
+          required: true
+          schema:
+            type: object
+            required: [ date ]
+            properties:
+              date:
+                type: string
+                format: date
+                x-nullable: false
+      responses:
+        200:
+          description: Задача успешно запущена
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Задача запущена.
+              count:
+                type: integer
+                example: 100
+        400:
+          description: Клиентская ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        422:
+          description: Ошибка схемы запроса
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error'
+
+  /sum-paid:
+    post:
+      summary: Получение суммы оплаты по заказу
+      tags:
+        - Order
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description: Идентификаторы заказов
+          required: true
+          schema:
+            type: object
+            required: [order_guids]
+            properties:
+              order_guids:
+                type: array
+                minItems: 1
+                maxItems: 1000
+                items:
+                  type: string
+                  format: uuid
+      responses:
+        400:
+          description: Клиентская ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        422:
+          description: Ошибка схемы запроса
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error' 
+        200:
+          description: Успешное получение данных
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    order_guid:
+                      type: string
+                      format: uuid
+                      example: "8f187b1b-9aea-4dc9-84c6-e0f1bbf6cb26"
+                      description: guid заказа
+                    sum_paid:
+                      type: number
+                      format: double
+                      x-omitempty: false
+                      example: 123.45
+                      description: cумма оплаты
+
+  /postpay-deferment:
+    post:
+      summary: Получение данных по отсрочке платежа
+      tags:
+        - Order
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description: Идентификаторы заказов
+          required: true
+          schema:
+            type: object
+            required: [ order_guids ]
+            properties:
+              order_guids:
+                type: array
+                minItems: 1
+                maxItems: 1000
+                items:
+                  type: string
+                  format: uuid
+      responses:
+        400:
+          description: Клиентская ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        422:
+          description: Ошибка схемы запроса
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        200:
+          description: Успешное получение данных
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    order_guid:
+                      type: string
+                      format: uuid
+                      example: "8f187b1b-9aea-4dc9-84c6-e0f1bbf6cb26"
+                      description: guid заказа
+                    letter_sum:
+                      type: number
+                      format: double
+                      x-omitempty: false
+                      example: 123.45
+                      description: сумма письма
+
+
+  /postpay/balance:
+    post:
+      summary: Получение баланса по Договорам постоплаты
+      tags:
+        - Postpay Contract
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description: Идентификаторы договоров
+          required: true
+          schema:
+            type: object
+            required: [contract_guids]
+            properties:
+              contract_guids:
+                type: array
+                minItems: 1
+                maxItems: 1000
+                items:
+                  type: string
+                  format: uuid
+      responses:
+        400:
+          description: Клиентская ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        422:
+          description: Ошибка схемы запроса
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        200:
+          description: Успешное получение данных
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    contract_guid:
+                      type: string
+                      format: uuid
+                      example: "8f187b1b-9aea-4dc9-84c6-e0f1bbf6cb26"
+                      description: guid договора
+                    balance:
+                      type: string
+                      format: double
+                      x-omitempty: false
+                      example: "123.45"
+                      description: cумма баланса
+
+  /postpay/free-limit:
+    post:
+      summary: Свободный лимит постоплаты - свободный лимит по договору доступный для оформления отгрузок клиенту
+      tags:
+        - Postpay Contract
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description: Идентификаторы договоров
+          required: true
+          schema:
+            type: object
+            required: [type, guids]
+            properties:
+              type:
+                type: string
+                enum: [ "contract", "order" ]
+                example: "contract"
+                description: тип документа
+              guids:
+                type: array
+                minItems: 1
+                maxItems: 1000
+                items:
+                  type: string
+                  format: uuid
+      responses:
+        400:
+          description: Клиентская ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        422:
+          description: Ошибка схемы запроса
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        200:
+          description: Успешное получение данных
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    contract_guid:
+                      type: string
+                      x-omitempty: false
+                      format: uuid
+                      example: "8f187b1b-9aea-4dc9-84c6-e0f1bbf6cb26"
+                      description: Идентификатор договора
+                    contract_number:
+                      type: string
+                      x-omitempty: false
+                      example: "ВИ-17380-П-23"
+                      description: Номер договора
+                    order_guids:
+                      type: array
+                      x-omitempty: false
+                      items:
+                        type: string
+                        format: uuid
+                      description: Идентификаторы заказов договора
+                    postpay_limit:
+                      type: string
+                      format: double
+                      x-omitempty: false
+                      example: "123.45"
+                      description: Свободный остаток по постоплате
+                    fail_reason:
+                      type: string
+                      x-omitempty: false
+                      example: limit_not_calculated
+                      description: Причина ошибки расчета
+                    postponement_days:
+                      type: integer
+                      example: 2
+                      description: Количество дней отсрочки оплаты
+                      x-omitempty: false
+                    overdue_order_guids:
+                      type: array
+                      x-omitempty: false
+                      items:
+                        type: string
+                        format: uuid
+                      description: Идентификаторы просроченных заказов
+                    deferred_postpay_limit:
+                      type: string
+                      format: double
+                      x-omitempty: false
+                      example: "123.45"
+                      description: Использованный лимит
+
+  /debtor-order/overdue:
+    post:
+      summary: Получение списка заказов с ПДЗ по Контрагенту / Договору постоплаты
+      description: > 
+        Получение списка заказов с ПДЗ по Контрагенту / Договору постоплаты. 
+        Максимальное кол-во в запросе 1000 Контрагентов ИЛИ 1000 Договоров постоплаты. На выходе все заказы у которых Баланс с отсрочкой (balance_deferment) отрицательный. 
+        Заказы отсортированы по дате создания (got_created_at). Если у заказов не определён Договор постоплаты, то они будут сгруппированы в массив в разрезе контрагентов (guid договора = пусто).
+      tags:
+        - Contractor
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description:  guid'ды Контрагентов ИЛИ Договоров постоплаты
+          required: true
+          schema:
+            type: object
+            properties:
+              contractor_guids:
+                type: array
+                minItems: 1
+                maxItems: 1000
+                x-omitempty: false
+                items:
+                  type: string
+                  format: uuid
+              contract_guids:
+                type: array
+                minItems: 1
+                maxItems: 1000
+                x-omitempty: false
+                items:
+                  type: string
+                  format: uuid
+      responses:
+        400:
+          description: Клиентская ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        422:
+          description: Ошибка схемы запроса
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        200:
+          description: Успешное получение данных
+          schema:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    contractor_guid:
+                      type: string
+                      format: uuid
+                    contracts:
+                      type: array
+                      items:
+                        $ref: '#/definitions/OverdueDebtorOrders'
+
+  /analytic-tool/balance/recalc:
+    post:
+      summary: Пересчет баланса
+      description: > 
+        Пересчет баланса, в результате увидим как изменился баланс, до и после, либо ошибку
+      tags:
+        - AnalyticTool
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: request
+          description:  guid'д Заказа
+          required: true
+          schema:
+            type: object
+            required: [order_guids]
+            properties:
+              order_guids:
+                type: array
+                minItems: 1
+                maxItems: 1000
+                x-omitempty: false
+                items:
+                  type: string
+                  format: uuid
+
+      responses:
+        400:
+          description: Клиентская ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        422:
+          description: Ошибка схемы запроса
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/Error'
+        200:
+          description: Успешное получение данных
+          schema:
+            type: array
+            items:
+                allOf:
+                  - $ref: '#/definitions/Balance'
+                  - type: object
+                    properties:
+                      fail_reason:
+                        type: string
+                        enum: [ 'order not found', 'contractor not found','unknown vid contractor']
+                        x-omitempty: true
+definitions:
+  Error:
+    type: object
+    description: объект ошибки, обязательным является лишь поле сообщения, опционально присутствует код и ряд других полей
+    required:
+      - message
+    properties:
+      message:
+        type: string
+        description: текстовое описание ошибки
+        example: "произошла такая-то ошибка"
+      code:
+        type: integer
+        description: цифровой код ошибки
+        example: 123
+
+  ErrorWithReason:
+    allOf:
+      - $ref: '#/definitions/Error'
+      - type: object
+        required: [ fail_reason ]
+        properties:
+          fail_reason:
+            type: string
+            enum: [ 'invalid_guid', 'invalid_line_id', 'invalid_order_guid', 'payment_not_found', 'order_not_found', 'order_is_not_cashless', 'contractor_mismatch', 'company_mismatch' ]
+            x-omitempty: false
+
+  CashFlowRegDoc:
+    type: object
+    properties:
+      document_guid:
+        type: string
+        format: uuid
+      released_at:
+        type: string
+        format: datetime
+        example: "2023-01-01T00:00:00+03:00"
+      number:
+        type: string
+#        format: number
+        example: "1234"
+      company_guid:
+        type: string
+        format: uuid
+      contractor_guid:
+        type: string
+        format: uuid
+      recording_mode:
+        type: string
+      currency:
+        type: string
+        format: currency
+        example: "rub"
+      amount:
+        type: number
+        format: double
+        example: "1.00"
+        x-omitempty: false
+
+  CashFlowRegDocWithLineId:
+    allOf:
+      - $ref: '#/definitions/CashFlowRegDoc'
+      - type: object
+        properties:
+          line_id:
+            type: string
+            format: uuid
+            x-omitempty: false
+
+  PaymentBankState:
+    type: object
+    properties:
+      statements:
+        type: array
+        items:
+          $ref: '#/definitions/Statement'
+      balance:
+        $ref: '#/definitions/Balance'
+
+  Balance:
+    type: object
+    properties:
+      currency:
+        type: string
+        format: currency
+        example: "rub"
+      updated_at:
+        type: string
+        format: datetime
+        example: "2023-01-01 00:00:00"
+      status:
+        type: string
+        enum: [ "irrelevant", "queue", "processing", "done", "impossible" ]
+        example: "done"
+        description: статус документа
+
+
+
+  OrderDetailBalance:
+    type: object
+    properties:
+      order_number:
+        type: string
+        description: Номер заказа
+      order_date_created:
+        type: string
+        format: datetime
+        example: "2024-04-04 11:11:11"
+        x-omitempty: false
+        description: Дата создания заказа
+      contract_type:
+        type: string
+        enum:
+          - "onetime"
+          - "prepay"
+          - "postpay"
+        example: "prepay"
+        x-omitempty: false
+        description: Тип договора
+      balance:
+        type: string
+        format: double
+        example: "1.00"
+        x-omitempty: false
+        description: Баланс заказа
+      balance_deferment:
+        type: string
+        format: double
+        example: "1.00"
+        x-omitempty: false
+        description: Баланс заказа с отсрочкой платежа
+      balance_status:
+        type: string
+        enum: [ "irrelevant", "queue", "processing", "done", "impossible" ]
+        example: "done"
+        description: Статус баланса по заказу
+      paid_amount:
+        type: string
+        format: double
+        example: "1.00"
+        x-omitempty: false
+        description: Сумма оплат по заказу
+      shipped_amount:
+        type: string
+        format: double
+        example: "1.00"
+        x-omitempty: false
+        description: Сумма отгруженных товаров по заказу
+      return_amount:
+        type: string
+        format: double
+        example: "1.00"
+        x-omitempty: false
+        description: Сумма возвращённых товаров по заказу
+
+
+parameters:
+  offsetParam:
+    name: offset
+    in: query
+    description: Номер запрашиваемой страницы
+    required: false
+    type: integer
+    format: int32
+    minimum: 0
+  limitParam:
+    name: limit
+    in: query
+    description: Максимальное количество записей на странице
+    required: false
+    type: integer
+    format: int32
+    maximum: 100
+    minimum: 0
