@@ -27,9 +27,9 @@ func NewHandler(svc service) *Handler {
 }
 
 func (h *Handler) Convert(c *fiber.Ctx) error {
-	params := BodyParams{}
+	params := new(BodyParams)
 
-	if err := json.NewDecoder(bytes.NewBuffer(c.Body())).Decode(&params); err != nil {
+	if err := json.NewDecoder(bytes.NewBuffer(c.Body())).Decode(params); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 

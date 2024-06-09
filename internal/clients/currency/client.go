@@ -29,7 +29,7 @@ func NewClient(httpClient doer, host, token string) *Client {
 }
 
 func (c *Client) CurrenciesFiat(ctx context.Context, codes []models.Code) ([]*models.Currency, error) {
-	req, err := makeRequestFiatFeetchMulti(ctx, c.host, c.token, codes...)
+	req, err := makeRequestFiatFetchMulti(ctx, c.host, c.token, codes...)
 	if err != nil {
 		return nil, fmt.Errorf("making fetch multi: %w", err)
 	}

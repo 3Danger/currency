@@ -17,7 +17,7 @@ const (
 	pathCryptoFetchPrices = "/crypto/fetch-prices"
 )
 
-func makeRequestFiatFeetchMulti(ctx context.Context, host, token string, codes ...models.Code) (*http.Request, error) {
+func makeRequestFiatFetchMulti(ctx context.Context, host, token string, codes ...models.Code) (*http.Request, error) {
 	paramCodes := lo.Map(codes,
 		func(item models.Code, _ int) string {
 			return string(item)
@@ -55,7 +55,9 @@ func makeRequestCryptoPossiblePairs(ctx context.Context, host, token string) (*h
 	return req, nil
 }
 
-func makeRequestCryptoFetchPrices(ctx context.Context, host, token string, pairs []*models.Pair) (*http.Request, error) {
+func makeRequestCryptoFetchPrices(
+	ctx context.Context, host, token string, pairs []*models.Pair,
+) (*http.Request, error) {
 	path, err := url.JoinPath(host, pathCryptoFetchPrices)
 	if err != nil {
 		return nil, fmt.Errorf("making path: %w", err)

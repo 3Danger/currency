@@ -34,6 +34,6 @@ func (p Pair) SplitCodes() (from, to Code, _ error) {
 	return Code(split[0]), Code(split[1]), nil
 }
 
-func JoinCodes(A, B Code) Pair {
-	return Pair(string(A) + "/" + string(B))
+func JoinCodes(a, b Code) Pair {
+	return Pair(string(a) + "/" + string(b))
 }

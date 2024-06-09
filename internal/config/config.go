@@ -25,7 +25,7 @@ type App struct {
 }
 
 type Client struct {
-	Host  string `envconfig:"HTTP_HOST" required:"true"`
+	Host  string `envconfig:"HTTP_HOST"  required:"true"`
 	Token string `envconfig:"HTTP_TOKEN" required:"true"`
 }
 
@@ -35,7 +35,7 @@ type Rest struct {
 
 type Workers struct {
 	Updater struct {
-		Host           string `envconfig:"WORKERS_UPDATER_HOST" required:"true"`
+		Host           string `envconfig:"WORKERS_UPDATER_HOST"            required:"true"`
 		UpdateSchedule string `envconfig:"WORKERS_UPDATER_UPDATE_SCHEDULE" default:"* * * * *"`
 	}
 }

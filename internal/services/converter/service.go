@@ -29,7 +29,9 @@ func NewService(r repo) Service {
 	}
 }
 
-func (s *service) Convert(ctx context.Context, pair models.Pair, value decimal.Decimal) (decimal.Decimal, *models.Code, error) {
+func (s *service) Convert(
+	ctx context.Context, pair models.Pair, value decimal.Decimal,
+) (decimal.Decimal, *models.Code, error) {
 	from, to, err := pair.SplitCodes()
 	if err != nil {
 		return decimal.Decimal{}, nil, fmt.Errorf("parsing pair code: %w", err)

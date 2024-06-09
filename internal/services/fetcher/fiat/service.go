@@ -16,6 +16,10 @@ type Client interface {
 	CurrenciesFiat(ctx context.Context, codes []models.Code) ([]*models.Currency, error)
 }
 
+type Service interface {
+	Process(ctx context.Context) error
+}
+
 type service struct {
 	repo   Repo
 	client Client
@@ -27,7 +31,7 @@ var allowFiatCodes = []models.Code{
 	models.CodeFiatCNY,
 }
 
-func NewService(repo Repo, client Client) *service {
+func NewService(repo Repo, client Client) Service {
 	return &service{
 		repo:   repo,
 		client: client,
