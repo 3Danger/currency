@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -8,12 +9,19 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
+	"github.com/rs/zerolog"
 )
 
 type Config struct {
-	Rest   Rest
-	Redis  Redis
-	Client Client
+	App     App
+	Rest    Rest
+	Redis   Redis
+	Client  Client
+	Workers Workers
+}
+
+type App struct {
+	LogLevel string `envconfig:"APP_LOG_LEVEL" default:"info"`
 }
 
 type Client struct {
@@ -27,8 +35,8 @@ type Rest struct {
 
 type Workers struct {
 	Updater struct {
-		Host       string        `envconfig:"WORKERS_UPDATER_HOST" required:"true"`
-		UpdateRate time.Duration `envconfig:"WORKERS_UPDATER_UPDATE_RATE" default:"1m"`
+		Host          string `envconfig:"WORKERS_UPDATER_HOST" required:"true"`
+		UpdateShedule string `envconfig:"WORKERS_UPDATER_UPDATE_SHEDULE" default:"* * * * *"` //TODO check format
 	}
 }
 
@@ -58,15 +66,24 @@ func (r Redis) Options() *redis.Options {
 	}
 }
 
+func (a App) ParseLevel() (zerolog.Level, error) {
+	level, err := zerolog.ParseLevel(a.LogLevel)
+	if err != nil {
+		return level, fmt.Errorf("parsing level: %w", err)
+	}
+
+	return level, nil
+}
+
 func Load() (Config, error) {
 	cnf := Config{} //nolint:exhaustruct
 
 	if err := godotenv.Load(".env"); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return cnf, errors.Wrap(err, "read .env file")
+		return cnf, fmt.Errorf("loading .env: %w", err)
 	}
 
 	if err := envconfig.Process("", &cnf); err != nil {
-		return cnf, errors.Wrap(err, "read environment")
+		return cnf, fmt.Errorf("parsing env to config: %w", err)
 	}
 
 	return cnf, nil

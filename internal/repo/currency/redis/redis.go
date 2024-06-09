@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/3Danger/currency/internal/models"
 	"github.com/3Danger/currency/internal/repo/currency"
 	"github.com/redis/go-redis/v9"
 	"github.com/samber/lo"
@@ -14,29 +15,36 @@ type repo struct {
 	cli *redis.Client
 }
 
-const entity = "currencies"
+const (
+	fiatCurrency   = "currencies:fiat"
+	cryptoCurrency = "currencies:crypto_pair"
+)
 
-func NewRepo(cli *redis.Client) *repo {
+func NewRepo(cli *redis.Client) currency.Repo {
 	return &repo{cli: cli}
 }
 
-func (r *repo) SetCurrency(ctx context.Context, currencies []*currency.Currency) error {
+func (r *repo) SetCurrenciesFiat(ctx context.Context, currencies []*models.Currency) error {
 	currencyMap := lo.SliceToMap(currencies,
-		func(item *currency.Currency) (string, decimal.Decimal) {
-			return item.Code, item.RateToUsd
+		func(item *models.Currency) (models.Code, decimal.Decimal) {
+			return item.Code, item.RateToUSD
 		})
 
-	if err := r.cli.HSet(ctx, entity, currencyMap).Err(); err != nil {
+	if err := r.cli.HSet(ctx, fiatCurrency, currencyMap).Err(); err != nil {
 		return fmt.Errorf("hsetting to redis: %w", err)
 	}
 
 	return nil
 }
 
-func (r *repo) Currency(ctx context.Context, code string) (*currency.Currency, error) {
-	result, err := r.cli.HGet(ctx, entity, code).Result()
+func (r *repo) Currency(ctx context.Context, code models.Code) (*models.Currency, error) {
+	result, err := r.cli.HGet(ctx, fiatCurrency, string(code)).Result()
 	if err != nil {
 		return nil, fmt.Errorf("hgetting from redis: %w", err)
+	}
+
+	if len(result) == 0 {
+		return nil, fmt.Errorf("have no rows")
 	}
 
 	rateToUsd, err := decimal.NewFromString(result)
@@ -44,14 +52,16 @@ func (r *repo) Currency(ctx context.Context, code string) (*currency.Currency, e
 		return nil, fmt.Errorf("converting to decimal: %w", err)
 	}
 
-	return &currency.Currency{Code: code, RateToUsd: rateToUsd}, nil
+	return &models.Currency{Code: code, RateToUSD: rateToUsd}, nil
 }
 
-func (r *repo) ListCodes(ctx context.Context) ([]string, error) {
-	result, err := r.cli.Keys(ctx, entity).Result()
+func (r *repo) ListCodes(ctx context.Context) ([]models.Code, error) {
+	result, err := r.cli.Keys(ctx, fiatCurrency).Result()
 	if err != nil {
 		return nil, fmt.Errorf("keys from redis: %w", err)
 	}
 
-	return result, nil
+	return lo.Map(result, func(item string, _ int) models.Code {
+		return models.Code(item)
+	}), nil
 }

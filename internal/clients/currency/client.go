@@ -2,12 +2,12 @@ package currency
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
+	"github.com/3Danger/currency/internal/models"
 	"github.com/samber/lo"
+	"github.com/shopspring/decimal"
 )
 
 type doer interface {
@@ -28,8 +28,8 @@ func NewClient(httpClient doer, host, token string) *Client {
 	}
 }
 
-func (c *Client) Currency(ctx context.Context, codes ...Code) (*Response, error) {
-	req, err := makeRequestFeetchMulti(ctx, c.host, c.token, codes...)
+func (c *Client) CurrenciesFiat(ctx context.Context, codes []models.Code) ([]*models.Currency, error) {
+	req, err := makeRequestFiatFeetchMulti(ctx, c.host, c.token, codes...)
 	if err != nil {
 		return nil, fmt.Errorf("making fetch multi: %w", err)
 	}
@@ -39,38 +39,79 @@ func (c *Client) Currency(ctx context.Context, codes ...Code) (*Response, error)
 		return nil, fmt.Errorf("doing request: %w", err)
 	}
 
-	result, err := processingResponse[Response](resp)
+	result, err := processingResponse[ResponseFiat](resp)
 	if err != nil {
 		return nil, fmt.Errorf("decoding response: %w", err)
 	}
 
-	return result, nil
+	return lo.MapToSlice(result.Results, func(key string, value decimal.Decimal) *models.Currency {
+		return &models.Currency{
+			Code:      models.Code(key),
+			RateToUSD: value,
+		}
+	}), nil
 }
 
-func processingResponse(resp *http.Response) (*Response, error) {
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+func (c *Client) PossiblePairs(ctx context.Context) (models.MapPossiblePairs, error) {
+	req, err := makeRequestCryptoPossiblePairs(ctx, c.host, c.token)
+	if err != nil {
+		return nil, fmt.Errorf("making fetch multi: %w", err)
 	}
 
-	result := new(Response)
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("doing request: %w", err)
+	}
 
-	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
+	result, err := processingResponse[ResponsePossiblePairs](resp)
+	if err != nil {
 		return nil, fmt.Errorf("decoding response: %w", err)
 	}
 
-	return result, nil
-}
+	possiblePairs := make(models.MapPossiblePairs, len(result.Pairs))
 
-func makeRequestFeetchMulti(ctx context.Context, host, token string, codes ...Code) (*http.Request, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", host+"/fetch-multi", nil)
-	if err != nil {
-		return nil, fmt.Errorf("making request: %w", err)
+	for pair := range result.Pairs {
+		crypto, fiat, err := pair.SplitCodes()
+		if err != nil {
+			return nil, fmt.Errorf("parsing pair: %w", err)
+		}
+
+		possiblePairs[crypto] = fiat
 	}
 
-	req.SetPathValue("api_key", token)
-	req.SetPathValue("from", string(CodeUSD))
-	codesString := strings.Join(lo.Map(codes, func(item Code, _ int) string { return string(item) }), ",")
-	req.SetPathValue("to", codesString)
+	return possiblePairs, nil
+}
 
-	return req, nil
+func (c *Client) CryptoPrices(ctx context.Context, pairs models.MapPossiblePairs) ([]*models.CurrencyPair, error) {
+	req, err := makeRequestCryptoFetchPrices(ctx, c.host, c.token, pairs)
+	if err != nil {
+		return nil, fmt.Errorf("making fetch multi: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("doing request: %w", err)
+	}
+
+	result, err := processingResponse[ResponsePrices](resp)
+	if err != nil {
+		return nil, fmt.Errorf("decoding response: %w", err)
+	}
+
+	cyrrencyPairs := make([]*models.CurrencyPair, 0, len(result.Prices))
+
+	for pair, value := range result.Prices {
+		from, to, err := pair.SplitCodes()
+		if err != nil {
+			return nil, fmt.Errorf("splitting pair: %w", err)
+		}
+
+		cyrrencyPairs = append(cyrrencyPairs, &models.CurrencyPair{
+			FromCode: from,
+			Rate:     value,
+			ToCode:   to,
+		})
+	}
+
+	return cyrrencyPairs, nil
 }

@@ -1,4 +1,4 @@
-package builder
+package build
 
 import (
 	"context"
@@ -39,7 +39,7 @@ func (b *Builder) addToShutdown(f func(ctx context.Context) error) {
 	b.rw.Unlock()
 }
 
-func (b *Builder) Shutdown(ctx context.Context) error {
+func (b *Builder) Shutdown(ctx context.Context) {
 	b.rw.Lock()
 	defer b.rw.Unlock()
 
