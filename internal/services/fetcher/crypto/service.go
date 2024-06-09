@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/3Danger/currency/internal/models"
+	"github.com/rs/zerolog"
 )
 
 type Repo interface {
@@ -28,6 +29,8 @@ func NewService(repo Repo, client Client) *service {
 }
 
 func (s *service) Process(ctx context.Context) error {
+	zerolog.Ctx(ctx).Info().Str("service", "crypto").Msg("updating")
+
 	cryptoPrices, err := s.client.CryptoPrices(ctx, allowPairs)
 	if err != nil {
 		return fmt.Errorf("getting cryptoPrices from client: %w", err)

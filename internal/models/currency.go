@@ -18,22 +18,6 @@ type CurrencyPair struct {
 	ToCode   Code
 }
 
-type Code string
-
-func (c Code) String() string { return string(c) }
-
-const (
-	CodeFiatUSD = Code("USD")
-	CodeFiatEUR = Code("EUR")
-	CodeFiatCNY = Code("CNY")
-)
-
-const (
-	CodeCryptoUSDT = Code("USDT")
-	CodeCryptoUSDC = Code("USDC")
-	CodeCryptoETH  = Code("ETH")
-)
-
 type MapPossiblePairs map[Code]Code
 
 type Pair string

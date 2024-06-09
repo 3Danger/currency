@@ -6,6 +6,7 @@ import (
 
 	"github.com/3Danger/currency/internal/models"
 	"github.com/3Danger/currency/internal/repo/currency"
+	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"github.com/samber/lo"
 	"github.com/shopspring/decimal"
@@ -17,7 +18,7 @@ type repo struct {
 
 const (
 	fiatCurrency   = "currencies:fiat"
-	cryptoCurrency = "currencies:crypto"
+	cryptoCurrency = "currencies:crypto_price"
 	possiblePairs  = "currencies:possible_pairs"
 )
 
@@ -52,14 +53,32 @@ func (r *repo) SetCryptoPrices(ctx context.Context, pairsRate []*models.Currency
 	return nil
 }
 
-func (r *repo) Currency(ctx context.Context, code models.Code) (*models.Currency, error) {
-	result, err := r.cli.HGet(ctx, fiatCurrency, string(code)).Result()
+func (r *repo) CurrencyPriceByPair(ctx context.Context, pair models.Pair) (*decimal.Decimal, error) {
+	result, err := r.cli.HGet(ctx, cryptoCurrency, pair.String()).Result()
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, nil
+		}
+
 		return nil, fmt.Errorf("hgetting from redis: %w", err)
 	}
 
-	if len(result) == 0 {
-		return nil, fmt.Errorf("have no rows")
+	rate, err := decimal.NewFromString(result)
+	if err != nil {
+		return nil, fmt.Errorf("converting to decimal: %w", err)
+	}
+
+	return &rate, nil
+}
+
+func (r *repo) Currency(ctx context.Context, code models.Code) (*models.Currency, error) {
+	result, err := r.cli.HGet(ctx, fiatCurrency, string(code)).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, nil
+		}
+
+		return nil, fmt.Errorf("hgetting from redis: %w", err)
 	}
 
 	rateToUsd, err := decimal.NewFromString(result)

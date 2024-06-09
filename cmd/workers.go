@@ -13,7 +13,8 @@ import (
 func workersCmd(ctx context.Context, builder *build.Builder) *cobra.Command {
 	//nolint:exhaustruct,goconst
 	cmd := &cobra.Command{
-		Use: "fetchers",
+		Use:   "fetchers",
+		Short: "Run workers for update currencies",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			zerolog.Ctx(ctx).Info().Msg("start " + cmd.Short)
 		},

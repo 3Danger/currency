@@ -1,17 +1,9 @@
+# Используем Bash как оболочку
+SHELL := /bin/bash
 
-.PHONY: *
-build-binary: ## build a binary
-	CGO_ENABLED=0 go build -tags '${TAGS}' ${LDFLAGS} -o bin/app
-build push pull:
-	make -C .docker/build $@
-build-%:
-	make -C .docker/build $@
+include .env
+export
 
-# Запуск/остановка локального окружения
-up down stop:
-	make -C .docker/development $@
-bash-% logs-% restart-%:
-	make -C .docker/development $@
 
 # Запуск всех тестов
 test:
@@ -36,6 +28,14 @@ redis-down:
 
 redis-down-clean: redis-down
 	@rm -rf db/redis
+
+redis-full-restart: redis-down-clean redis-up
+
+run-workers:
+	go run main.go fetchers all
+
+run-rest:
+	go run main.go rest
 
 # Генерация http-сервера на основе swagger-спецификации
 # Требует предустановленного goswagger https://goswagger.io/
