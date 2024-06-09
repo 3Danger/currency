@@ -23,6 +23,6 @@ func (t *Time[T]) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (t *Time) MarshalJSON() ([]byte, error) {
+func (t *Time[T]) MarshalJSON() ([]byte, error) {
 	return []byte(t.Time.Format(time.DateTime)), nil
 }

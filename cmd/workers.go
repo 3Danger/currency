@@ -13,7 +13,7 @@ import (
 func workersCmd(ctx context.Context, builder *build.Builder) *cobra.Command {
 	//nolint:exhaustruct,goconst
 	cmd := &cobra.Command{
-		Use: "workers",
+		Use: "fetchers",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			zerolog.Ctx(ctx).Info().Msg("start " + cmd.Short)
 		},
@@ -26,7 +26,9 @@ func workersCmd(ctx context.Context, builder *build.Builder) *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		workersFetcherAllCmd(ctx, builder),
 		workersFetcherFiatCmd(ctx, builder),
+		workersFetcherCryptoCmd(ctx, builder),
 	)
 
 	return cmd
@@ -39,7 +41,7 @@ func workersFetcherAllCmd(ctx context.Context, builder *build.Builder) *cobra.Co
 		Short: "",
 		RunE: runWorkers(ctx, []cronworker.Worker{
 			builder.NewServiceFetcherFiat(),
-			builder.NewServiceFetcherCrypto(),
+			builder.NewServiceFetcherCryptoPrices(),
 		}),
 	}
 }
@@ -47,7 +49,7 @@ func workersFetcherAllCmd(ctx context.Context, builder *build.Builder) *cobra.Co
 func workersFetcherFiatCmd(ctx context.Context, builder *build.Builder) *cobra.Command {
 	//nolint:exhaustruct
 	return &cobra.Command{
-		Use:   "fetcher",
+		Use:   "fiat",
 		Short: "",
 		RunE: runWorkers(ctx, []cronworker.Worker{
 			builder.NewServiceFetcherFiat(),
@@ -58,10 +60,10 @@ func workersFetcherFiatCmd(ctx context.Context, builder *build.Builder) *cobra.C
 func workersFetcherCryptoCmd(ctx context.Context, builder *build.Builder) *cobra.Command {
 	//nolint:exhaustruct
 	return &cobra.Command{
-		Use:   "crypto_pair",
+		Use:   "crypto",
 		Short: "",
 		RunE: runWorkers(ctx, []cronworker.Worker{
-			builder.NewServiceFetcherCrypto(),
+			builder.NewServiceFetcherCryptoPrices(),
 		}),
 	}
 }
@@ -71,7 +73,6 @@ func runWorkers(ctx context.Context, worker []cronworker.Worker) func(cmd *cobra
 		tm := cronworker.NewTaskManager()
 
 		for _, w := range worker {
-			w.Execute(ctx) // TODO убрать после дебага
 			zerolog.Ctx(ctx).Info().Str("entity", "cron-task-manager").Str("name", w.Name).Msg("add task")
 
 			if err := tm.AddWorker(ctx, w); err != nil {

@@ -8,6 +8,7 @@ import (
 
 type Repo interface {
 	SetCurrenciesFiat(ctx context.Context, currencies []*models.Currency) error
+	SetCryptoPrices(ctx context.Context, pairsRate []*models.CurrencyPair) error
 	Currency(ctx context.Context, code models.Code) (*models.Currency, error)
 	ListCodes(ctx context.Context) ([]models.Code, error)
 }

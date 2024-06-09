@@ -35,8 +35,8 @@ type Rest struct {
 
 type Workers struct {
 	Updater struct {
-		Host          string `envconfig:"WORKERS_UPDATER_HOST" required:"true"`
-		UpdateShedule string `envconfig:"WORKERS_UPDATER_UPDATE_SHEDULE" default:"* * * * *"` //TODO check format
+		Host           string `envconfig:"WORKERS_UPDATER_HOST" required:"true"`
+		UpdateSchedule string `envconfig:"WORKERS_UPDATER_UPDATE_SCHEDULE" default:"* * * * *"`
 	}
 }
 

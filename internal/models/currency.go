@@ -20,6 +20,8 @@ type CurrencyPair struct {
 
 type Code string
 
+func (c Code) String() string { return string(c) }
+
 const (
 	CodeFiatUSD = Code("USD")
 	CodeFiatEUR = Code("EUR")
@@ -36,6 +38,8 @@ type MapPossiblePairs map[Code]Code
 
 type Pair string
 
+func (p Pair) String() string { return string(p) }
+
 func (p Pair) SplitCodes() (from, to Code, _ error) {
 	split := strings.Split(string(p), "/")
 
@@ -46,6 +50,6 @@ func (p Pair) SplitCodes() (from, to Code, _ error) {
 	return Code(split[0]), Code(split[1]), nil
 }
 
-func joinCodes(A, B Code) Pair {
+func JoinCodes(A, B Code) Pair {
 	return Pair(string(A) + "/" + string(B))
 }

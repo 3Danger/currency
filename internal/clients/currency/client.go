@@ -82,7 +82,11 @@ func (c *Client) PossiblePairs(ctx context.Context) (models.MapPossiblePairs, er
 	return possiblePairs, nil
 }
 
-func (c *Client) CryptoPrices(ctx context.Context, pairs models.MapPossiblePairs) ([]*models.CurrencyPair, error) {
+func (c *Client) CryptoPrices(ctx context.Context, pairs []*models.Pair) ([]*models.CurrencyPair, error) {
+	if len(pairs) > 10 {
+		return nil, fmt.Errorf("too many pairs provided")
+	}
+
 	req, err := makeRequestCryptoFetchPrices(ctx, c.host, c.token, pairs)
 	if err != nil {
 		return nil, fmt.Errorf("making fetch multi: %w", err)

@@ -17,7 +17,8 @@ type repo struct {
 
 const (
 	fiatCurrency   = "currencies:fiat"
-	cryptoCurrency = "currencies:crypto_pair"
+	cryptoCurrency = "currencies:crypto"
+	possiblePairs  = "currencies:possible_pairs"
 )
 
 func NewRepo(cli *redis.Client) currency.Repo {
@@ -26,11 +27,25 @@ func NewRepo(cli *redis.Client) currency.Repo {
 
 func (r *repo) SetCurrenciesFiat(ctx context.Context, currencies []*models.Currency) error {
 	currencyMap := lo.SliceToMap(currencies,
-		func(item *models.Currency) (models.Code, decimal.Decimal) {
-			return item.Code, item.RateToUSD
+		func(item *models.Currency) (string, string) {
+			return item.Code.String(), item.RateToUSD.String()
 		})
 
 	if err := r.cli.HSet(ctx, fiatCurrency, currencyMap).Err(); err != nil {
+		return fmt.Errorf("hsetting to redis: %w", err)
+	}
+
+	return nil
+}
+
+func (r *repo) SetCryptoPrices(ctx context.Context, pairsRate []*models.CurrencyPair) error {
+	pairsRateMap := lo.SliceToMap(pairsRate,
+		func(item *models.CurrencyPair) (string, string) {
+			return models.JoinCodes(item.FromCode, item.ToCode).String(), item.Rate.String()
+		},
+	)
+
+	if err := r.cli.HSet(ctx, cryptoCurrency, pairsRateMap).Err(); err != nil {
 		return fmt.Errorf("hsetting to redis: %w", err)
 	}
 

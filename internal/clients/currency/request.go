@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	pathFiatFetchMulti   = "/fetch-multi"
-	pathCryptoPairs      = "/crypto_pair/pairs"
-	pathCryptoFetcPrices = "/crypto_pair/fetch-prices"
+	pathFiatFetchMulti    = "/fetch-multi"
+	pathCryptoPairs       = "/crypto/pairs"
+	pathCryptoFetchPrices = "/crypto/fetch-prices"
 )
 
 func makeRequestFiatFeetchMulti(ctx context.Context, host, token string, codes ...models.Code) (*http.Request, error) {
@@ -55,8 +55,8 @@ func makeRequestCryptoPossiblePairs(ctx context.Context, host, token string) (*h
 	return req, nil
 }
 
-func makeRequestCryptoFetchPrices(ctx context.Context, host, token string, pairs models.MapPossiblePairs) (*http.Request, error) {
-	path, err := url.JoinPath(host, pathCryptoFetcPrices)
+func makeRequestCryptoFetchPrices(ctx context.Context, host, token string, pairs []*models.Pair) (*http.Request, error) {
+	path, err := url.JoinPath(host, pathCryptoFetchPrices)
 	if err != nil {
 		return nil, fmt.Errorf("making path: %w", err)
 	}
@@ -64,8 +64,8 @@ func makeRequestCryptoFetchPrices(ctx context.Context, host, token string, pairs
 	sbPairs := new(strings.Builder)
 
 	count := len(pairs)
-	for k, v := range pairs {
-		sbPairs.WriteString(string(joinCodes(k, v)))
+	for _, pair := range pairs {
+		sbPairs.WriteString(pair.String())
 
 		if count--; count > 0 {
 			sbPairs.WriteString(",")
