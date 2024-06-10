@@ -1,0 +1,137 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API сервиса Currency",
+        "title": "Сервис конвертации валюты",
+        "contact": {},
+        "version": "1.0.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api",
+    "paths": {
+        "/convert": {
+            "post": {
+                "description": "Конвертация валюты из одной валюты в другую",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Convert"
+                ],
+                "summary": "Конвертация валюты",
+                "parameters": [
+                    {
+                        "description": "Запрос на конвертацию",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/rest.BodyParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное получение данных",
+                        "schema": {
+                            "$ref": "#/definitions/rest.Result"
+                        }
+                    },
+                    "400": {
+                        "description": "Клиентская ошибка",
+                        "schema": {
+                            "$ref": "#/definitions/rest.Error"
+                        }
+                    },
+                    "422": {
+                        "description": "Ошибка схемы запроса",
+                        "schema": {
+                            "$ref": "#/definitions/rest.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Серверная ошибка",
+                        "schema": {
+                            "$ref": "#/definitions/rest.Error"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.Code": {
+            "type": "string",
+            "enum": [
+                "USD",
+                "EUR",
+                "CNY",
+                "USDT",
+                "USDC",
+                "ETH"
+            ],
+            "x-enum-varnames": [
+                "CodeFiatUSD",
+                "CodeFiatEUR",
+                "CodeFiatCNY",
+                "CodeCryptoUSDT",
+                "CodeCryptoUSDC",
+                "CodeCryptoETH"
+            ]
+        },
+        "rest.BodyParams": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Code"
+                        }
+                    ],
+                    "example": "USD"
+                },
+                "to": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Code"
+                        }
+                    ],
+                    "example": "USDT"
+                },
+                "value": {
+                    "type": "number",
+                    "example": 20
+                }
+            }
+        },
+        "rest.Error": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "произошла такая-то ошибка"
+                }
+            }
+        },
+        "rest.Result": {
+            "type": "object",
+            "properties": {
+                "mediator_code": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.Code"
+                        }
+                    ],
+                    "example": "USD"
+                },
+                "result": {
+                    "type": "number",
+                    "example": 121
+                }
+            }
+        }
+    }
+}

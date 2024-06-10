@@ -10,6 +10,12 @@ import (
 	zlog "github.com/rs/zerolog"
 )
 
+// @title Сервис конвертации валюты
+// @version 1.0.0
+// @description API сервиса Currency
+
+// @host localhost:8080
+// @BasePath /api
 func main() {
 	if err := app(); err != nil {
 		fmt.Println(err)

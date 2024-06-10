@@ -22,3 +22,9 @@ run-workers:
 run-rest:
 	go run main.go rest
 
+update-swagger:
+	swag init --output api/swagger
+
+install-swag:
+	go install github.com/swaggo/swag/cmd/swag@latest
+

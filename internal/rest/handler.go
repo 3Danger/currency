@@ -26,6 +26,18 @@ func NewHandler(svc service) *Handler {
 	}
 }
 
+// Convert конвертирует валюту
+// @Summary Конвертация валюты
+// @Description Конвертация валюты из одной валюты в другую
+// @Tags Convert
+// @Accept json
+// @Produce json
+// @Param request body BodyParams true "Запрос на конвертацию"
+// @Success 200 {object} Result "Успешное получение данных"
+// @Failure 400 {object} Error "Клиентская ошибка"
+// @Failure 422 {object} Error "Ошибка схемы запроса"
+// @Failure 500 {object} Error "Серверная ошибка"
+// @Router /convert [post]
 func (h *Handler) Convert(c *fiber.Ctx) error {
 	params := new(BodyParams)
 
@@ -39,7 +51,7 @@ func (h *Handler) Convert(c *fiber.Ctx) error {
 
 	result, mediator, err := h.svc.Convert(c.Context(), models.JoinCodes(*params.From, *params.To), *params.Value)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return err
 	}
 
 	respResult, err := json.Marshal(Result{Result: result, MediatorCode: mediator})

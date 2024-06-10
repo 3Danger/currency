@@ -6,10 +6,11 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// BodyParams представляет собой запрос на конвертацию
 type BodyParams struct {
-	From  *models.Code     `json:"from"  required:"true"`
-	To    *models.Code     `json:"to"    required:"true"`
-	Value *decimal.Decimal `json:"value" required:"true"`
+	From  *models.Code     `json:"from"  example:"USD"    required:"true"`
+	To    *models.Code     `json:"to"    example:"USDT"   required:"true"`
+	Value *decimal.Decimal `json:"value" example:"20.000" required:"true"`
 }
 
 func (p *BodyParams) Validate() error {

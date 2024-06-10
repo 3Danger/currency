@@ -1,0 +1,90 @@
+basePath: /api
+definitions:
+  models.Code:
+    enum:
+    - USD
+    - EUR
+    - CNY
+    - USDT
+    - USDC
+    - ETH
+    type: string
+    x-enum-varnames:
+    - CodeFiatUSD
+    - CodeFiatEUR
+    - CodeFiatCNY
+    - CodeCryptoUSDT
+    - CodeCryptoUSDC
+    - CodeCryptoETH
+  rest.BodyParams:
+    properties:
+      from:
+        allOf:
+        - $ref: '#/definitions/models.Code'
+        example: USD
+      to:
+        allOf:
+        - $ref: '#/definitions/models.Code'
+        example: USDT
+      value:
+        example: 20
+        type: number
+    type: object
+  rest.Error:
+    properties:
+      message:
+        example: произошла такая-то ошибка
+        type: string
+    type: object
+  rest.Result:
+    properties:
+      mediator_code:
+        allOf:
+        - $ref: '#/definitions/models.Code'
+        example: USD
+      result:
+        example: 121
+        type: number
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API сервиса Currency
+  title: Сервис конвертации валюты
+  version: 1.0.0
+paths:
+  /convert:
+    post:
+      consumes:
+      - application/json
+      description: Конвертация валюты из одной валюты в другую
+      parameters:
+      - description: Запрос на конвертацию
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/rest.BodyParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное получение данных
+          schema:
+            $ref: '#/definitions/rest.Result'
+        "400":
+          description: Клиентская ошибка
+          schema:
+            $ref: '#/definitions/rest.Error'
+        "422":
+          description: Ошибка схемы запроса
+          schema:
+            $ref: '#/definitions/rest.Error'
+        "500":
+          description: Серверная ошибка
+          schema:
+            $ref: '#/definitions/rest.Error'
+      summary: Конвертация валюты
+      tags:
+      - Convert
+swagger: "2.0"

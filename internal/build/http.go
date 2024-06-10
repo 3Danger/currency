@@ -1,11 +1,13 @@
 package build
 
 import (
+	_ "github.com/3Danger/currency/api/swagger"
 	"github.com/3Danger/currency/internal/models"
 	"github.com/3Danger/currency/internal/rest"
 	"github.com/gofiber/fiber/v2"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	fiberSwagger "github.com/swaggo/fiber-swagger"
 	"golang.org/x/net/context"
 )
 
@@ -13,16 +15,16 @@ func (b *Builder) ConfigureAPI(ctx context.Context) func(ctx context.Context) er
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if e, ok := err.(*fiber.Error); ok {
-				_ = c.Status(e.Code).JSON(fiber.Map{
-					"error": err.Error(),
+				_ = c.Status(e.Code).JSON(rest.Error{
+					Message: e.Error(),
 				})
 
 				return nil
 			}
 
 			if requestErr := new(models.Error); errors.As(err, &requestErr) {
-				_ = c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-					"error": err.Error(),
+				_ = c.Status(fiber.StatusBadRequest).JSON(rest.Error{
+					Message: requestErr.Error(),
 				})
 
 				return nil
@@ -36,8 +38,8 @@ func (b *Builder) ConfigureAPI(ctx context.Context) func(ctx context.Context) er
 					Msg("error configuring api")
 			}
 
-			_ = c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "internal server error",
+			_ = c.Status(fiber.StatusInternalServerError).JSON(rest.Error{
+				Message: "internal server error",
 			})
 
 			return nil
@@ -48,7 +50,8 @@ func (b *Builder) ConfigureAPI(ctx context.Context) func(ctx context.Context) er
 
 	handler := rest.NewHandler(srvConverter)
 
-	app.Post("/convert", handler.Convert)
+	app.Get("/api/swagger/*", fiberSwagger.WrapHandler)
+	app.Post("/api/convert", handler.Convert)
 
 	return func(ctx context.Context) error {
 		return app.Listen(b.cnf.Rest.Port)
