@@ -30,6 +30,10 @@ make run-workers
 make run-rest
 ```
 
+Открыть swagger документацию можно по пути:
+- http://localhost:8080/api/swagger/index.html
+
+
 <span style="font-size:1.5em;">Помощь</span>
 
 Если у вас возникли вопросы или проблемы, пожалуйста, создайте issue в репозитории.
