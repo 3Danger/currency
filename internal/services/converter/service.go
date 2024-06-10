@@ -63,7 +63,7 @@ func (s *service) Convert(
 		}
 
 		if rate == nil {
-			return decimal.Decimal{}, nil, models.ErrCodeNotFound
+			return decimal.Decimal{}, nil, models.ErrCurrencyNotFound
 		}
 	}
 
@@ -101,7 +101,7 @@ func (s *service) alternativePair(ctx context.Context, from, to models.Code) (*d
 	}
 
 	if rate == nil {
-		return nil, nil, fmt.Errorf("no currency rate found")
+		return nil, nil, models.ErrCurrencyNotFound
 	}
 
 	rub, err := s.r.Currency(ctx, curFiat)
@@ -110,7 +110,7 @@ func (s *service) alternativePair(ctx context.Context, from, to models.Code) (*d
 	}
 
 	if rub == nil {
-		return nil, nil, nil
+		return nil, nil, models.ErrCurrencyNotFound
 	}
 
 	eur, err := s.r.Currency(ctx, to)
@@ -119,7 +119,7 @@ func (s *service) alternativePair(ctx context.Context, from, to models.Code) (*d
 	}
 
 	if eur == nil {
-		return nil, nil, nil
+		return nil, nil, models.ErrCurrencyNotFound
 	}
 
 	resultRate := (rub.RateToUSD.Div(eur.RateToUSD)).Mul(*rate)
