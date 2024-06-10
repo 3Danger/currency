@@ -3,13 +3,17 @@ package converter
 import (
 	"context"
 	"fmt"
+	t "time"
 
 	"github.com/3Danger/currency/internal/models"
+	"github.com/3Danger/currency/pkg/time"
 	"github.com/shopspring/decimal"
 )
 
 type repo interface {
-	CurrencyPriceByPair(ctx context.Context, pair models.Pair) (*decimal.Decimal, error)
+	CurrencyPriceByPair(ctx context.Context, pair models.Pair) (
+		*decimal.Decimal, *time.Time[time.LayoutDateTime], error,
+	)
 	Currency(ctx context.Context, code models.Code) (*models.Currency, error)
 }
 
@@ -50,9 +54,13 @@ func (s *service) Convert(
 		from, to = to, from
 	}
 
-	rate, err := s.r.CurrencyPriceByPair(ctx, models.JoinCodes(from, to))
+	rate, updated, err := s.r.CurrencyPriceByPair(ctx, models.JoinCodes(from, to))
 	if err != nil {
 		return decimal.Decimal{}, nil, fmt.Errorf("getting rate: %w", err)
+	}
+
+	if updated != nil && t.Since(updated.Time) > t.Minute {
+		return decimal.Decimal{}, nil, models.ErrCurrencyIsDeprecated
 	}
 
 	var mediatorCode *models.Code
@@ -84,24 +92,29 @@ func (s *service) alternativePair(ctx context.Context, from, to models.Code) (*d
 	var (
 		curFiat = to
 		rate    *decimal.Decimal
+		updated *time.Time[time.LayoutDateTime]
 	)
 	for _, code := range fiatCodes {
 		var err error
 
 		to = code
 
-		rate, err = s.r.CurrencyPriceByPair(ctx, models.JoinCodes(from, to))
+		rate, updated, err = s.r.CurrencyPriceByPair(ctx, models.JoinCodes(from, to))
 		if err != nil {
 			return nil, nil, fmt.Errorf("getting rate: %w", err)
 		}
 
-		if rate != nil {
+		if rate != nil && updated != nil && t.Since(updated.Time) <= t.Minute {
 			break
 		}
 	}
 
-	if rate == nil {
+	if rate == nil || updated == nil {
 		return nil, nil, models.ErrCurrencyNotFound
+	}
+
+	if t.Since(updated.Time) > t.Minute {
+		return nil, nil, models.ErrCurrencyIsDeprecated
 	}
 
 	rub, err := s.r.Currency(ctx, curFiat)

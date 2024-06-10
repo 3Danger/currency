@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/3Danger/currency/internal/models"
+	"github.com/3Danger/currency/pkg/time"
 	"github.com/samber/lo"
 	"github.com/shopspring/decimal"
 )
@@ -48,6 +49,7 @@ func (c *Client) CurrenciesFiat(ctx context.Context, codes []models.Code) ([]*mo
 		return &models.Currency{
 			Code:      models.Code(key),
 			RateToUSD: value,
+			Updated:   result.Updated,
 		}
 	}), nil
 }
@@ -102,7 +104,10 @@ func (c *Client) CryptoPrices(ctx context.Context, pairs []*models.Pair) ([]*mod
 		return nil, fmt.Errorf("decoding response: %w", err)
 	}
 
-	cyrrencyPairs := make([]*models.CurrencyPair, 0, len(result.Prices))
+	var (
+		cyrrencyPairs = make([]*models.CurrencyPair, 0, len(result.Prices))
+		updated       = time.Now[time.LayoutDateTime]()
+	)
 
 	for pair, value := range result.Prices {
 		from, to, err := pair.SplitCodes()
@@ -114,6 +119,7 @@ func (c *Client) CryptoPrices(ctx context.Context, pairs []*models.Pair) ([]*mod
 			FromCode: from,
 			Rate:     value,
 			ToCode:   to,
+			Updated:  updated,
 		})
 	}
 

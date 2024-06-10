@@ -3,6 +3,7 @@ package models
 import (
 	"strings"
 
+	"github.com/3Danger/currency/pkg/time"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 )
@@ -10,12 +11,14 @@ import (
 type Currency struct {
 	Code      Code
 	RateToUSD decimal.Decimal
+	Updated   time.Time[time.LayoutDateTime]
 }
 
 type CurrencyPair struct {
 	FromCode Code
 	Rate     decimal.Decimal
 	ToCode   Code
+	Updated  time.Time[time.LayoutDateTime]
 }
 
 type MapPossiblePairs map[Code]Code

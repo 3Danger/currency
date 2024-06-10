@@ -23,7 +23,11 @@ func (b *Builder) ConfigureAPI(ctx context.Context) func(ctx context.Context) er
 			}
 
 			if requestErr := new(models.Error); errors.As(err, &requestErr) {
-				_ = c.Status(fiber.StatusBadRequest).JSON(rest.Error{
+				code := fiber.StatusBadRequest
+				if errors.Is(requestErr, models.ErrCurrencyIsDeprecated) {
+					code = fiber.StatusInternalServerError
+				}
+				_ = c.Status(code).JSON(rest.Error{
 					Message: requestErr.Error(),
 				})
 
