@@ -15,22 +15,12 @@ cd currency
 HTTP_TOKEN={{YOUR_TOKEN}}
 ```
 
-Установите зависимости:
-``` shell
-go mod tidy
-```
-
-Для запуска Postgres в контейнере используйте команду:
+Обновить зависимости, запустить контейнер postgres, применить миграции
 ``` makefile
-make postgres-up
+make setup
 ```
 
-Примените миграции:
-``` makefile
-make migrate-postgres-up
-```
-
-Для запуска воркеров используйте команду:
+Для запуска синхронизации валют:
 ``` makefile
 make run-workers
 ```
