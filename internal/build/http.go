@@ -35,7 +35,7 @@ func (b *Builder) ConfigureAPI(ctx context.Context) func(ctx context.Context) er
 					Error().
 					Err(err).
 					Str("path", c.Path()).
-					Msg("handling request")
+					Msg("handing request")
 			}
 
 			_ = c.Status(fiber.StatusInternalServerError).JSON(rest.Error{
