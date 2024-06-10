@@ -13,11 +13,12 @@ import (
 )
 
 type Config struct {
-	App     App
-	Rest    Rest
-	Redis   Redis
-	Client  Client
-	Workers Workers
+	App      App
+	Rest     Rest
+	Redis    Redis
+	Postgres Postgres
+	Client   Client
+	Workers  Workers
 }
 
 type App struct {

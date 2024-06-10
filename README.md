@@ -20,19 +20,14 @@ HTTP_TOKEN={{YOUR_TOKEN}}
 go mod tidy
 ```
 
-Для запуска Redis в контейнере используйте команду:
+Для запуска Postgres в контейнере используйте команду:
 ``` makefile
-make redis-up
+make postgres-up
 ```
 
-Для остановки Redis используйте команду:
+Примените миграции:
 ``` makefile
-make redis-down
-```
-
-Для полной перезагрузки Redis (включая очистку данных) используйте команду:
-``` makefile
-make redis-full-restart
+make migrate-postgres-up
 ```
 
 Для запуска воркеров используйте команду:

@@ -1,7 +1,7 @@
 package build
 
 import (
-	"github.com/3Danger/currency/internal/repo/currency/redis"
+	"github.com/3Danger/currency/internal/repo/currency/postgres"
 	"github.com/3Danger/currency/internal/services/fetcher/crypto"
 	"github.com/3Danger/currency/internal/services/fetcher/fiat"
 	"github.com/3Danger/currency/pkg/cronworker"
@@ -9,7 +9,8 @@ import (
 
 func (b *Builder) NewServiceFetcherFiat() cronworker.Worker {
 	var (
-		repo    = redis.NewRepo(b.redis)
+		//repo    = redis.NewRepo(b.redis)
+		repo    = postgres.NewRepo(b.pgx)
 		httpCli = b.NewCurrencyClient()
 	)
 
@@ -24,7 +25,8 @@ func (b *Builder) NewServiceFetcherFiat() cronworker.Worker {
 
 func (b *Builder) NewServiceFetcherCryptoPrices() cronworker.Worker {
 	var (
-		repo    = redis.NewRepo(b.redis)
+		//repo    = redis.NewRepo(b.redis)
+		repo    = postgres.NewRepo(b.pgx)
 		httpCli = b.NewCurrencyClient()
 	)
 

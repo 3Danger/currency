@@ -25,6 +25,7 @@ func Run(ctx context.Context, conf config.Config) error {
 	root.AddCommand(
 		restCmd(ctx, builder),
 		workersCmd(ctx, builder),
+		migrateCmd(ctx, builder.Config()),
 	)
 
 	return errors.Wrap(root.ExecuteContext(ctx), "run application")

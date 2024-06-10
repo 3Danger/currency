@@ -20,7 +20,6 @@ type repo struct {
 const (
 	fiatCurrency   = "currencies:fiat"
 	cryptoCurrency = "currencies:crypto_price"
-	possiblePairs  = "currencies:possible_pairs"
 )
 
 func NewRepo(cli *redis.Client) currency.Repo {
@@ -85,15 +84,4 @@ func (r *repo) Currency(ctx context.Context, code models.Code) (*models.Currency
 	}
 
 	return &models.Currency{Code: code, RateToUSD: *rateToUSD, Updated: *updated}, nil
-}
-
-func (r *repo) ListCodes(ctx context.Context) ([]models.Code, error) {
-	result, err := r.cli.Keys(ctx, fiatCurrency).Result()
-	if err != nil {
-		return nil, fmt.Errorf("keys from redis: %w", err)
-	}
-
-	return lo.Map(result, func(item string, _ int) models.Code {
-		return models.Code(item)
-	}), nil
 }

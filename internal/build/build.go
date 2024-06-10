@@ -6,14 +6,15 @@ import (
 	"sync"
 
 	"github.com/3Danger/currency/internal/config"
-	"github.com/redis/go-redis/v9"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
 
 type Builder struct {
 	cnf config.Config
 
-	redis *redis.Client
+	//redis *redis.Client
+	pgx *pgxpool.Pool
 
 	rw       sync.Mutex
 	shutdown []func(ctx context.Context) error
@@ -22,16 +23,25 @@ type Builder struct {
 func New(ctx context.Context, cnf config.Config) (*Builder, error) {
 	b := Builder{cnf: cnf}
 
-	redisClient := redis.NewClient(cnf.Redis.Options())
+	//redisClient := redis.NewClient(cnf.Redis.Options())
 
-	if err := redisClient.Ping(ctx).Err(); err != nil {
-		return nil, fmt.Errorf("ping redis: %w", err)
+	//if err := redisClient.Ping(ctx).Err(); err != nil {
+	//	return nil, fmt.Errorf("ping redis: %w", err)
+	//}
+
+	//b.redis = redisClient
+
+	pool, err := pgxpool.New(ctx, b.cnf.Postgres.DSN())
+	if err != nil {
+		return nil, fmt.Errorf("create postgres pool: %w", err)
 	}
 
-	b.redis = redisClient
+	b.pgx = pool
 
 	return &b, nil
 }
+
+func (b *Builder) Config() config.Config { return b.cnf }
 
 func (b *Builder) addToShutdown(f func(ctx context.Context) error) {
 	b.rw.Lock()

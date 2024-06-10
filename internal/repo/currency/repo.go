@@ -13,5 +13,4 @@ type Repo interface {
 	SetCryptoPrices(ctx context.Context, pairsRate []*models.CurrencyPair) error
 	CurrencyPriceByPair(ctx context.Context, pair models.Pair) (*decimal.Decimal, *time.Time[time.LayoutDateTime], error)
 	Currency(ctx context.Context, code models.Code) (*models.Currency, error)
-	ListCodes(ctx context.Context) ([]models.Code, error)
 }
