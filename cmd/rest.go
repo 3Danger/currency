@@ -8,7 +8,6 @@ import (
 )
 
 func restCmd(ctx context.Context, builder *build.Builder) *cobra.Command {
-	//nolint:exhaustruct
 	return &cobra.Command{
 		Use:   "rest",
 		Short: "Run rest server",

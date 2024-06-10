@@ -11,9 +11,8 @@ import (
 )
 
 func Run(ctx context.Context, conf config.Config) error {
-	root := &cobra.Command{ //nolint:exhaustruct
+	root := &cobra.Command{
 		RunE: func(cmd *cobra.Command, args []string) error {
-			//nolint:wrapcheck
 			return cmd.Usage()
 		},
 	}

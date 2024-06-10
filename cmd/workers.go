@@ -11,7 +11,6 @@ import (
 )
 
 func workersCmd(ctx context.Context, builder *build.Builder) *cobra.Command {
-	//nolint:exhaustruct,goconst
 	cmd := &cobra.Command{
 		Use:   "fetchers",
 		Short: "Run workers for update currencies",
@@ -22,7 +21,7 @@ func workersCmd(ctx context.Context, builder *build.Builder) *cobra.Command {
 			zerolog.Ctx(ctx).Info().Msg("stop " + cmd.Short)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return cmd.Usage() //nolint:wrapcheck
+			return cmd.Usage()
 		},
 	}
 
@@ -36,7 +35,6 @@ func workersCmd(ctx context.Context, builder *build.Builder) *cobra.Command {
 }
 
 func workersFetcherAllCmd(ctx context.Context, builder *build.Builder) *cobra.Command {
-	//nolint:exhaustruct
 	return &cobra.Command{
 		Use:   "all",
 		Short: "",
@@ -48,7 +46,6 @@ func workersFetcherAllCmd(ctx context.Context, builder *build.Builder) *cobra.Co
 }
 
 func workersFetcherFiatCmd(ctx context.Context, builder *build.Builder) *cobra.Command {
-	//nolint:exhaustruct
 	return &cobra.Command{
 		Use:   "fiat",
 		Short: "",
@@ -59,7 +56,6 @@ func workersFetcherFiatCmd(ctx context.Context, builder *build.Builder) *cobra.C
 }
 
 func workersFetcherCryptoCmd(ctx context.Context, builder *build.Builder) *cobra.Command {
-	//nolint:exhaustruct
 	return &cobra.Command{
 		Use:   "crypto",
 		Short: "",

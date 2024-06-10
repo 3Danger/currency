@@ -76,7 +76,7 @@ func (a App) ParseLevel() (zerolog.Level, error) {
 }
 
 func Load() (Config, error) {
-	cnf := Config{} //nolint:exhaustruct
+	cnf := Config{}
 
 	if err := godotenv.Load(".env"); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return cnf, fmt.Errorf("loading .env: %w", err)

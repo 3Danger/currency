@@ -20,7 +20,7 @@ type Builder struct {
 }
 
 func New(ctx context.Context, cnf config.Config) (*Builder, error) {
-	b := Builder{cnf: cnf} //nolint:exhaustruct
+	b := Builder{cnf: cnf}
 
 	redisClient := redis.NewClient(cnf.Redis.Options())
 
