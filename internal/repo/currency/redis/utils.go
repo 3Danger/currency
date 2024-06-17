@@ -7,12 +7,12 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func splitRateDate(rate, rowTs string) (
+func decodeRow(num, rowTs string) (
 	*decimal.Decimal, *time.Time[time.LayoutDateTime], error,
 ) {
-	dec, err := decimal.NewFromString(rate)
+	dec, err := decimal.NewFromString(num)
 	if err != nil {
-		return nil, nil, fmt.Errorf("decoding rate: %w", err)
+		return nil, nil, fmt.Errorf("decoding decimal: %w", err)
 	}
 
 	timestamp, err := time.NewFromString[time.LayoutDateTime](rowTs)

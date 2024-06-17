@@ -80,7 +80,7 @@ func (r *repo) CurrencyPriceByPair(ctx context.Context, pair models.Pair) (
 		return nil, nil, fmt.Errorf("hgetting from redis: %w", err)
 	}
 
-	return splitRateDate(row, rowTs)
+	return decodeRow(row, rowTs)
 }
 
 func (r *repo) Currency(ctx context.Context, code models.Code) (*models.Currency, error) {
@@ -102,7 +102,7 @@ func (r *repo) Currency(ctx context.Context, code models.Code) (*models.Currency
 		return nil, fmt.Errorf("hgetting from redis: %w", err)
 	}
 
-	rateToUSD, updated, err := splitRateDate(row, rowTs)
+	rateToUSD, updated, err := decodeRow(row, rowTs)
 	if err != nil {
 		return nil, fmt.Errorf("parsing rate date: %w", err)
 	}
