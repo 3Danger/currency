@@ -42,7 +42,11 @@ func (t *Time[T]) UnmarshalJSON(data []byte) error {
 }
 
 func (t Time[T]) MarshalJSON() ([]byte, error) {
-	return []byte(t.Time.Format(time.DateTime)), nil
+	var l T
+	return []byte(t.Time.Format(l.Layout())), nil
 }
 
-func (t Time[T]) String() string { return t.Time.Format(time.DateTime) }
+func (t Time[T]) String() string {
+	var l T
+	return t.Time.Format(l.Layout())
+}

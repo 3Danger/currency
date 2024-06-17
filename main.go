@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/3Danger/currency/cmd"
 	"github.com/3Danger/currency/internal/config"
@@ -23,6 +24,8 @@ func main() {
 }
 
 func app() error {
+	time.Local = time.UTC
+
 	cnf, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
