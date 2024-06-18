@@ -52,12 +52,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/rest.Error"
                         }
                     },
-                    "422": {
-                        "description": "Ошибка схемы запроса",
-                        "schema": {
-                            "$ref": "#/definitions/rest.Error"
-                        }
-                    },
                     "500": {
                         "description": "Серверная ошибка",
                         "schema": {
@@ -152,6 +146,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "API сервиса Currency",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {

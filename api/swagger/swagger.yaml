@@ -76,10 +76,6 @@ paths:
           description: Клиентская ошибка
           schema:
             $ref: '#/definitions/rest.Error'
-        "422":
-          description: Ошибка схемы запроса
-          schema:
-            $ref: '#/definitions/rest.Error'
         "500":
           description: Серверная ошибка
           schema:

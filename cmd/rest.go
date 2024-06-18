@@ -29,10 +29,10 @@ func runRest(ctx context.Context, builder *build.Builder) func(cmd *cobra.Comman
 
 			cancel()
 		}()
-		zerolog.Ctx(ctx).Info().Str("entity", "cron-task-manager").Msg("starting tasks")
+		zerolog.Ctx(ctx).Info().Str("entity", "rest").Msg("starting rest")
 		<-ctx.Done()
 
-		zerolog.Ctx(ctx).Info().Str("entity", "cron-task-manager").Msg("stopping tasks")
+		zerolog.Ctx(ctx).Info().Str("entity", "rest").Msg("stopping rest")
 
 		return nil
 	}

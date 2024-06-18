@@ -35,7 +35,6 @@ func NewHandler(svc service) *Handler {
 // @Param request body BodyParams true "Запрос на конвертацию"
 // @Success 200 {object} Result "Успешное получение данных"
 // @Failure 400 {object} Error "Клиентская ошибка"
-// @Failure 422 {object} Error "Ошибка схемы запроса"
 // @Failure 500 {object} Error "Серверная ошибка"
 // @Router /convert [post]
 func (h *Handler) Convert(c *fiber.Ctx) error {
